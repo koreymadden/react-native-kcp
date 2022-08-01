@@ -1,6 +1,6 @@
 {
   "name": "kcpjs",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "pure js of kcpjs = kcpgo_to_js(kcp)",
   "homepage": "https://github.com/as3long/kcpjs",
   "main": "./dist/index.js",

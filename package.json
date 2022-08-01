@@ -1,5 +1,5 @@
 {
-  "name": "kcpjs",
+  "name": "@as3long/kcpjs",
   "version": "1.0.11",
   "description": "pure js of kcpjs = kcpgo_to_js(kcp)",
   "homepage": "https://github.com/as3long/kcpjs",
@@ -12,7 +12,8 @@
     "test": "jest"
   },
   "keywords": [
-    "kcp"
+    "kcp",
+    "pure"
   ],
   "author": "as3long@qq.com",
   "license": "MIT",

@@ -1,9 +1,9 @@
 import * as dgram from 'dgram';
 import EventEmitter = require('events');
 import { fecHeaderSizePlus2, typeData, typeParity, nonceSize, mtuLimit, cryptHeaderSize, crcSize } from './common';
-import { FecDecoder } from './fecDecoder';
-import { FecEncoder } from './fecEncoder';
-import { FecPacket } from './fecPacket';
+// import { FecDecoder } from './fecDecoder';
+// import { FecEncoder } from './fecEncoder';
+// import { FecPacket } from './fecPacket';
 import { IKCP_OVERHEAD, IKCP_SN_OFFSET, Kcp } from './kcp';
 import * as crypto from 'crypto';
 import * as crc32 from 'crc-32';
@@ -88,8 +88,6 @@ export class Listener {
                     conv,
                     port: rinfo.port,
                     host: rinfo.address,
-                    dataShards: this.dataShards,
-                    parityShards: this.parityShards,
                     listener: this,
                     conn: this.conn,
                     ownConn: false,
@@ -141,8 +139,8 @@ export class UDPSession extends EventEmitter {
     bufptr: Buffer;
 
     // FEC codec
-    fecDecoder: FecDecoder;
-    fecEncoder: FecEncoder;
+    // fecDecoder: FecDecoder;
+    // fecEncoder: FecEncoder;
 
     // settings
     port: number;
@@ -194,14 +192,14 @@ export class UDPSession extends EventEmitter {
         this.kcp.release();
 
         // 释放 fec
-        if (this.fecDecoder) {
-            this.fecDecoder.release();
-            this.fecDecoder = undefined;
-        }
-        if (this.fecEncoder) {
-            this.fecEncoder.release();
-            this.fecEncoder = undefined;
-        }
+        // if (this.fecDecoder) {
+        //     this.fecDecoder.release();
+        //     this.fecDecoder = undefined;
+        // }
+        // if (this.fecEncoder) {
+        //     this.fecEncoder.release();
+        //     this.fecEncoder = undefined;
+        // }
 
         if (this.listener) {
             this.listener.closeSession(this.key);
@@ -268,28 +266,28 @@ export class UDPSession extends EventEmitter {
         };
 
         // 1. FEC encoding
-        if (this.fecEncoder) {
-            // ecc = this.fecEncoder.encode
-            this.fecEncoder.encode(buf, (err, result) => {
-                if (err) {
-                    // logger.error(err);
-                    return;
-                }
-                const { data, parity } = result;
-                const dataArr: Buffer[] = [];
-                if (data?.length) {
-                    dataArr.push(...data);
-                }
-                if (parity?.length) {
-                    dataArr.push(...parity);
-                }
-                for (const buff of dataArr) {
-                    doOutput(buff);
-                }
-            });
-        } else {
-            doOutput(buf);
-        }
+        // if (this.fecEncoder) {
+        //     // ecc = this.fecEncoder.encode
+        //     this.fecEncoder.encode(buf, (err, result) => {
+        //         if (err) {
+        //             // logger.error(err);
+        //             return;
+        //         }
+        //         const { data, parity } = result;
+        //         const dataArr: Buffer[] = [];
+        //         if (data?.length) {
+        //             dataArr.push(...data);
+        //         }
+        //         if (parity?.length) {
+        //             dataArr.push(...parity);
+        //         }
+        //         for (const buff of dataArr) {
+        //             doOutput(buff);
+        //         }
+        //     });
+        // } else {
+        doOutput(buf);
+        // }
     }
 
     check() {
@@ -347,63 +345,63 @@ export class UDPSession extends EventEmitter {
     }
 
     kcpInput(data: Buffer) {
-        let kcpInErrors = 0;
-        let fecParityShards = 0;
+        const kcpInErrors = 0;
+        const fecParityShards = 0;
 
-        const fpkt = new FecPacket(data);
-        const fecFlag = fpkt.flag();
-        if (fecFlag == typeData || fecFlag == typeParity) {
-            // 16bit kcp cmd [81-84] and frg [0-255] will not overlap with FEC type 0x00f1 0x00f2
-            if (data.byteLength >= fecHeaderSizePlus2) {
-                if (fecFlag == typeParity) {
-                    fecParityShards++;
-                }
+        // const fpkt = new FecPacket(data);
+        // const fecFlag = fpkt.flag();
+        // if (fecFlag == typeData || fecFlag == typeParity) {
+        //     // 16bit kcp cmd [81-84] and frg [0-255] will not overlap with FEC type 0x00f1 0x00f2
+        //     if (data.byteLength >= fecHeaderSizePlus2) {
+        //         if (fecFlag == typeParity) {
+        //             fecParityShards++;
+        //         }
 
-                // if fecDecoder is not initialized, create one with default parameter
-                if (!this.fecDecoder) {
-                    this.fecDecoder = new FecDecoder(1, 1);
-                }
-                this.fecDecoder.decode(fpkt, (err, result) => {
-                    if (err) {
-                        return;
-                    }
-                    const { data = [], parity = [] } = result;
-                    for (const buff of data) {
-                        const len = buff.readUInt16LE();
-                        const ret = this.kcp.input(buff.slice(2, 2 + len), true, this.ackNoDelay);
-                        if (ret != 0) {
-                            kcpInErrors++;
-                        }
-                    }
-                    for (const buff of parity) {
-                        const len = buff.readUInt16LE();
-                        const ret = this.kcp.input(buff.slice(2, 2 + len), false, this.ackNoDelay);
-                        if (ret != 0) {
-                            kcpInErrors++;
-                        }
-                    }
+        //         // if fecDecoder is not initialized, create one with default parameter
+        //         if (!this.fecDecoder) {
+        //             this.fecDecoder = new FecDecoder(1, 1);
+        //         }
+        //         this.fecDecoder.decode(fpkt, (err, result) => {
+        //             if (err) {
+        //                 return;
+        //             }
+        //             const { data = [], parity = [] } = result;
+        //             for (const buff of data) {
+        //                 const len = buff.readUInt16LE();
+        //                 const ret = this.kcp.input(buff.slice(2, 2 + len), true, this.ackNoDelay);
+        //                 if (ret != 0) {
+        //                     kcpInErrors++;
+        //                 }
+        //             }
+        //             for (const buff of parity) {
+        //                 const len = buff.readUInt16LE();
+        //                 const ret = this.kcp.input(buff.slice(2, 2 + len), false, this.ackNoDelay);
+        //                 if (ret != 0) {
+        //                     kcpInErrors++;
+        //                 }
+        //             }
 
-                    const size = this.kcp.peekSize();
-                    if (size > 0) {
-                        const buffer = Buffer.alloc(size);
-                        const len = this.kcp.recv(buffer);
-                        if (len) {
-                            this.emit('recv', buffer.slice(0, len));
-                        }
-                    }
-                });
-            }
-        } else {
-            this.kcp.input(data, true, this.ackNoDelay);
-            const size = this.kcp.peekSize();
-            if (size > 0) {
-                const buffer = Buffer.alloc(size);
-                const len = this.kcp.recv(buffer);
-                if (len) {
-                    this.emit('recv', buffer.slice(0, len));
-                }
+        //             const size = this.kcp.peekSize();
+        //             if (size > 0) {
+        //                 const buffer = Buffer.alloc(size);
+        //                 const len = this.kcp.recv(buffer);
+        //                 if (len) {
+        //                     this.emit('recv', buffer.slice(0, len));
+        //                 }
+        //             }
+        //         });
+        //     }
+        // } else {
+        this.kcp.input(data, true, this.ackNoDelay);
+        const size = this.kcp.peekSize();
+        if (size > 0) {
+            const buffer = Buffer.alloc(size);
+            const len = this.kcp.recv(buffer);
+            if (len) {
+                this.emit('recv', buffer.slice(0, len));
             }
         }
+        // }
     }
 
     readLoop() {
@@ -418,14 +416,12 @@ function newUDPSession(args: {
     conv: number;
     port: number;
     host: string;
-    dataShards: number;
-    parityShards: number;
     listener: Listener;
     conn: any;
     ownConn: boolean;
     block: CryptBlock;
 }): UDPSession {
-    const { conv, port, host, dataShards, parityShards, listener, conn, ownConn, block } = args;
+    const { conv, port, host, listener, conn, ownConn, block } = args;
     const sess = new UDPSession();
     sess.port = port;
     sess.host = host;
@@ -436,22 +432,22 @@ function newUDPSession(args: {
     sess.recvbuf = Buffer.alloc(mtuLimit);
 
     // FEC codec initialization
-    if (dataShards && parityShards) {
-        sess.fecDecoder = new FecDecoder(dataShards, parityShards);
-        if (sess.block) {
-            sess.fecEncoder = new FecEncoder(dataShards, parityShards, cryptHeaderSize);
-        } else {
-            sess.fecEncoder = new FecEncoder(dataShards, parityShards, 0);
-        }
-    }
+    // if (dataShards && parityShards) {
+    //     sess.fecDecoder = new FecDecoder(dataShards, parityShards);
+    //     if (sess.block) {
+    //         sess.fecEncoder = new FecEncoder(dataShards, parityShards, cryptHeaderSize);
+    //     } else {
+    //         sess.fecEncoder = new FecEncoder(dataShards, parityShards, 0);
+    //     }
+    // }
 
     // calculate additional header size introduced by FEC and encryption
     if (sess.block) {
         sess.headerSize += cryptHeaderSize;
     }
-    if (sess.fecEncoder) {
-        sess.headerSize += fecHeaderSizePlus2;
-    }
+    // if (sess.fecEncoder) {
+    //     sess.headerSize += fecHeaderSizePlus2;
+    // }
 
     sess.kcp = new Kcp(conv, sess);
     sess.kcp.setReserveBytes(sess.headerSize);
@@ -481,8 +477,6 @@ export function Listen(port: number, callback: ListenCallback): any {
 export interface ListenOptions {
     port: number;
     block?: CryptBlock;
-    dataShards?: number;
-    parityShards?: number;
     callback: ListenCallback;
 }
 
@@ -494,7 +488,7 @@ export interface ListenOptions {
 //
 // Check https://github.com/klauspost/reedsolomon for details
 export function ListenWithOptions(opts: ListenOptions): Listener {
-    const { port, block, dataShards, parityShards, callback } = opts;
+    const { port, block, callback } = opts;
     const socket = dgram.createSocket('udp4');
     socket.bind(port);
     socket.on('listening', (err) => {
@@ -502,34 +496,19 @@ export function ListenWithOptions(opts: ListenOptions): Listener {
             console.error(err);
         }
     });
-    return serveConn(block, dataShards, parityShards, socket, true, callback);
+    return serveConn(block, socket, true, callback);
 }
 
 // ServeConn serves KCP protocol for a single packet connection.
-export function ServeConn(
-    block: any,
-    dataShards: number,
-    parityShards: number,
-    conn: dgram.Socket,
-    callback: ListenCallback,
-): Listener {
-    return serveConn(block, dataShards, parityShards, conn, false, callback);
+export function ServeConn(block: any, conn: dgram.Socket, callback: ListenCallback): Listener {
+    return serveConn(block, conn, false, callback);
 }
 
-function serveConn(
-    block: any,
-    dataShards: number,
-    parityShards: number,
-    conn: dgram.Socket,
-    ownConn: boolean,
-    callback: ListenCallback,
-): Listener {
+function serveConn(block: any, conn: dgram.Socket, ownConn: boolean, callback: ListenCallback): Listener {
     const listener = new Listener();
     listener.conn = conn;
     listener.ownConn = ownConn;
     listener.sessions = {};
-    listener.dataShards = dataShards;
-    listener.parityShards = parityShards;
     listener.block = block;
     listener.callback = callback;
     listener.monitor();
@@ -546,8 +525,6 @@ export interface DialOptions {
     port: number;
     host: string;
     block?: CryptBlock;
-    dataShards?: number;
-    parityShards?: number;
 }
 
 // DialWithOptions connects to the remote address "raddr" on the network "udp" with packet encryption
@@ -558,14 +535,12 @@ export interface DialOptions {
 //
 // Check https://github.com/klauspost/reedsolomon for details
 export function DialWithOptions(opts: DialOptions): UDPSession {
-    const { conv, port, host, dataShards, parityShards, block } = opts;
+    const { conv, port, host, block } = opts;
     const conn = dgram.createSocket('udp4');
     return newUDPSession({
         conv,
         port,
         host,
-        dataShards,
-        parityShards,
         listener: undefined,
         conn,
         ownConn: true,

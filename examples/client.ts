@@ -1,8 +1,8 @@
 import { DialWithOptions } from '../src/session';
 import { AesBlock } from '../src/crypt';
-import { log, host, port, conv, algorithm, key, iv, dataShards, parityShards } from './common';
+import { log, host, port, conv, algorithm, key, iv } from './common';
 
-let block = undefined;
+let block;
 if (algorithm && key && iv) {
     block = new AesBlock(algorithm, key, iv);
 }
@@ -13,8 +13,6 @@ const session = DialWithOptions({
     port,
     host,
     block,
-    dataShards,
-    parityShards,
 });
 session.on('recv', (buff: Buffer) => {
     log('recv:', buff.toString());

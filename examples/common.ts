@@ -9,11 +9,6 @@ export const host = '127.0.0.1';
 export const port = 12345;
 export const conv = 255;
 
-// fec 前向纠错
-// 两个参数的任意一个为0，则不启用 fec
-export const dataShards = 4;
-export const parityShards = 1;
-
 // 加密
 // 3个参数的任意一个为空，则不启用加密
 export const algorithm: crypto.CipherGCMTypes = 'aes-128-gcm';

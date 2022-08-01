@@ -1,8 +1,8 @@
 import { ListenWithOptions } from '../src/session';
 import { AesBlock } from '../src/crypt';
-import { port, algorithm, key, iv, dataShards, parityShards } from './common';
+import { port, algorithm, key, iv } from './common';
 
-let block = undefined;
+let block;
 if (algorithm && key && iv) {
     block = new AesBlock(algorithm, key, iv);
 }
@@ -11,8 +11,6 @@ if (algorithm && key && iv) {
 const listener = ListenWithOptions({
     port,
     block,
-    dataShards,
-    parityShards,
     callback: (session) => {
         // accept new session
         session.on('recv', (buff: Buffer) => {

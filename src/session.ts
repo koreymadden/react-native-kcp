@@ -1,9 +1,6 @@
 import * as dgram from 'dgram';
 import EventEmitter = require('events');
 import { fecHeaderSizePlus2, typeData, typeParity, nonceSize, mtuLimit, cryptHeaderSize, crcSize } from './common';
-// import { FecDecoder } from './fecDecoder';
-// import { FecEncoder } from './fecEncoder';
-// import { FecPacket } from './fecPacket';
 import { IKCP_OVERHEAD, IKCP_SN_OFFSET, Kcp } from './kcp';
 import * as crypto from 'crypto';
 import * as crc32 from 'crc-32';
@@ -21,8 +18,8 @@ function addrToString(arg1: dgram.RemoteInfo | string, arg2?: number): string {
 
 export class Listener {
     block: CryptBlock; // block encryption
-    dataShards: number; // FEC data shard
-    parityShards: number; // FEC parity shard
+    // dataShards: number; // FEC data shard
+    // parityShards: number; // FEC parity shard
     conn: dgram.Socket; // the underlying packet connection
     ownConn: boolean; // true if we created conn internally, false if provided by caller
 
@@ -484,8 +481,6 @@ export interface ListenOptions {
 //
 // 'block' is the block encryption algorithm to encrypt packets.
 //
-// 'dataShards', 'parityShards' specify how many parity packets will be generated following the data packets.
-//
 // Check https://github.com/klauspost/reedsolomon for details
 export function ListenWithOptions(opts: ListenOptions): Listener {
     const { port, block, callback } = opts;
@@ -530,8 +525,6 @@ export interface DialOptions {
 // DialWithOptions connects to the remote address "raddr" on the network "udp" with packet encryption
 //
 // 'block' is the block encryption algorithm to encrypt packets.
-//
-// 'dataShards', 'parityShards' specify how many parity packets will be generated following the data packets.
 //
 // Check https://github.com/klauspost/reedsolomon for details
 export function DialWithOptions(opts: DialOptions): UDPSession {

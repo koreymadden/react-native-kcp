@@ -1,14 +1,10 @@
-# kcpjs
+# ham-kcpjs
 
 纯 js 实现 kcp
 
-参考 kcp-go 来实现
+代码来自 [kcpjs](https://github.com/bruce48x/kcpjs)
 
-相比 [node-kcp-x](https://github.com/bruce48x/node-kcp) 多了两个特性
-
-1: FEC 前向纠错
-
-2: 加密
+去掉了FEC 前向纠错, 因为里面有C++代码
 
 # 示例1
 ```sh
@@ -34,10 +30,6 @@ port
 block
 加密模块
 
-dataShards
-parityShards
-前向纠错参数
-
 callback
 客户端连接成功的回调
 
@@ -57,7 +49,3 @@ conv
 
 block
 加密模块
-
-dataShards
-parityShards
-前向纠错参数

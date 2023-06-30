@@ -1,4 +1,5 @@
-import * as crypto from 'crypto';
+import * as crypto from 'crypto-browserify';
+
 
 // The length n of the initial vector iv must be between 7 and 13 (n is greater than or equal to 7, n is less than or equal to 13)
 

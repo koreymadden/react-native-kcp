@@ -27,6 +27,7 @@
     "typescript": "4.3.5"
   },
   "dependencies": {
-    "crc-32": "^1.2.1"
+    "crc-32": "^1.2.1",
+    "crypto-browserify": "^3.12.0"
   }
 }

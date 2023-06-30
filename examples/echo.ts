@@ -1,5 +1,5 @@
 import { ListenWithOptions, DialWithOptions } from '../src/session';
-import * as crypto from 'crypto';
+import * as crypto from 'crypto-browserify';
 import { AesBlock } from '../src/crypt';
 import { log } from './common';
 
@@ -9,7 +9,7 @@ const port = 22333;
 const conv = 255;
 
 // 加密
-const algorithm: crypto.CipherGCMTypes = 'aes-128-gcm';
+const algorithm = 'aes-128-gcm';
 const key = crypto.randomBytes(128 / 8);
 const iv = crypto.randomBytes(12);
 

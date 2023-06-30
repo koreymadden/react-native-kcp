@@ -1,17 +1,19 @@
-# ham-kcpjs
+# kcp-js
 
-纯 js 实现 kcp
+### Pure JavaScript Implementation of the KCP Protocol.
 
-代码来自 [kcpjs](https://github.com/bruce48x/kcpjs)
+[![JavaScript KCP](https://img.shields.io/badge/Powered_By-KCP-293C81?style=for-the-badge&logo=JavaScript&logoColor=FFFFFF)](https://reactnative.dev/docs/environment-setup)
 
-去掉了FEC 前向纠错, 因为里面有C++代码
+Code from [bruce48x/kcpjs](https://github.com/bruce48x/kcpjs) and [as3long/kcpjs](https://github.com/as3long/kcpjs).
 
-# 示例1
+> Note: The forward error correction (FEC) feature has been removed from the codebase due to the presence of C++ code.
+
+# Example 1
 ```sh
 ts-node examples/echo.ts
 ```
 
-# 示例2
+# Example 2
 ```sh
 ts-node examples/server.ts
 ts-node examples/client.ts
@@ -19,33 +21,25 @@ ts-node examples/client.ts
 
 # API
 
-## 创建 server
-ListenWithOptions
+## Create Server
+```ListenWithOptions```
 
-### 参数
+#### Parameters
 
-port
-监听的端口
+| Option | Description |
+| ------ | ----------- |
+| port | Listening port. |
+| block | Encryption module. |
+| callback | Callback for successful client connection. |
 
-block
-加密模块
+## Create Client
+```DialWithOptions```
 
-callback
-客户端连接成功的回调
+#### Parameters
 
-## 创建 client
-DialWithOptions
-
-### 参数
-
-host
-服务器地址
-
-port
-服务器端口
-
-conv
-会话ID
-
-block
-加密模块
+| Option | Description |
+| ------ | ----------- |
+| host | Server address. |
+| port | Server port. |
+| conv | Session ID. |
+| block | Encryption module. |

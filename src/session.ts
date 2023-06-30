@@ -38,7 +38,7 @@ export class Listener {
                 decrypted = true;
             } else {
                 // do nothing
-                // crc32 检测未通过
+                // test failed 
             }
         } else if (!this.block) {
             decrypted = true;
@@ -99,7 +99,7 @@ export class Listener {
     }
 
     /**
-     * 停止 UDP 监听，关闭 socket
+     * Stop UDP listening, close socket
      */
     close(): any {
         if (this.ownConn) {
@@ -188,7 +188,7 @@ export class UDPSession extends EventEmitter {
         // release pending segments
         this.kcp.release();
 
-        // 释放 fec
+        // release fec
         // if (this.fecDecoder) {
         //     this.fecDecoder.release();
         //     this.fecDecoder = undefined;
@@ -321,7 +321,7 @@ export class UDPSession extends EventEmitter {
     packetInput(data: Buffer): void {
         let decrypted = false;
         if (this.block && data.byteLength >= cryptHeaderSize) {
-            // 解密
+            // decrypt
             data = this.block.decrypt(data);
 
             const checksum = crc32.buf(data.slice(cryptHeaderSize)) >>> 0;
@@ -330,7 +330,7 @@ export class UDPSession extends EventEmitter {
                 decrypted = true;
             } else {
                 // do nothing
-                // crc32 检测未通过
+                // crc32 test failed
             }
         } else if (this.block == undefined) {
             decrypted = true;

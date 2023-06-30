@@ -63,37 +63,37 @@ function _ibound_(lower: number, middle: number, upper: number): number {
 
 class Segment {
     // uint32
-    // 会话ID
+    // session id
     conv: number;
     // uint8
-    // command 的缩写，代表此 segment 是什么类型
-    // cmd 有4种，分别是
-    // - 数据包 ( IKCP_CMD_PUSH )
-    // - ACK 包 ( IKCP_CMD_ACK )
-    // - 窗口探测包 ( IKCP_CMD_WASK )
-    // - 窗口回应包 ( IKCP_CMD_WINS )
+    // The abbreviation of command, which represents the type of this segment
+    // There are 4 types of cmd, namely
+    // - data packet ( IKCP_CMD_PUSH )
+    // - ACK packet ( IKCP_CMD_ACK )
+    // - window detection packet ( IKCP_CMD_WASK )
+    // - window response packet ( IKCP_CMD_WINS )
     cmd: number;
     // uint8
-    // fragment 的缩写
-    // 代表数据分片的倒序序号，当数据大于 mss 时，需要将数据分片
+    // abbreviation for fragment
+    // Represents the reverse sequence number of the data fragmentation. When the data is larger than mss, the data needs to be fragmented
     frg: number;
     // uint16
-    // window 的缩写
+    // window abbreviation
     wnd: number;
     // uint32
-    // timestamp 的缩写，当前 segment 发送的时间戳
+    // The abbreviation of timestamp, the timestamp sent by the current segment
     ts: number;
-    // sequence number 的缩写，代表 segment 的序列号
+    // The abbreviation of sequence number, which represents the sequence number of the segment
     sn: number;
-    // unacknowledged 的缩写，表示此编号之前的包都收到了
+    // The abbreviation of unacknowledged, indicating that the package before this number has been received
     una: number;
-    // Retransmision TimeOut，超时重传时间
+    // Retransmision TimeOut, timeout retransmission time
     rto: number;
-    // segment 的发送次数，没发送一次加1，用于统计 segment 发送了几次
+    // The number of times the segment is sent, plus 1 if it is not sent once, is used to count how many times the segment has been sent
     xmit: number;
-    // 即 resend timestmap，指定的重传的时间戳
+    // That is, resend timestamp, the specified retransmission timestamp
     resendts: number;
-    // 用于以数据驱动的快速重传机制
+    // For data-driven fast retransmission mechanism
     fastack: number;
     acked: number;
 
@@ -161,7 +161,7 @@ export class Kcp {
     snd_wnd: number;
     rcv_wnd: number;
     rmt_wnd: number;
-    // 拥塞窗口的大小
+    // The size of the congestion window
     cwnd: number;
     probe: number;
     // uint32
@@ -206,9 +206,9 @@ export class Kcp {
         this.buffer = Buffer.alloc(this.mtu);
         this.state = 0;
 
-        this.snd_una = 0; // 发送出去未得到确认的包的序号
-        this.snd_nxt = 0; // 下一个发出去的包的序号
-        this.rcv_nxt = 0; // 待接收的下一个包的序号
+        this.snd_una = 0; // Sequence numbers of unacknowledged packets sent
+        this.snd_nxt = 0; // The sequence number of the next outgoing packet
+        this.rcv_nxt = 0; // The sequence number of the next packet to be received
 
         this.ts_recent = 0;
         this.ts_lastack = 0;
@@ -219,9 +219,9 @@ export class Kcp {
         this.rx_rto = IKCP_RTO_DEF;
         this.rx_minrto = IKCP_RTO_MIN;
 
-        this.snd_wnd = IKCP_WND_SND; // [发送窗口]的大小
-        this.rcv_wnd = IKCP_WND_RCV; // [接收窗口]的大小
-        this.rmt_wnd = IKCP_WND_RCV; // 远端的[接收窗口]的大小
+        this.snd_wnd = IKCP_WND_SND; // [send window] size
+        this.rcv_wnd = IKCP_WND_RCV; // [receive window] size
+        this.rmt_wnd = IKCP_WND_RCV; // The size of the remote [receive window]
         this.cwnd = 0;
         this.probe = 0;
 
@@ -244,9 +244,9 @@ export class Kcp {
         this.snd_buf = [];
         this.rcv_buf = [];
 
-        this.acklist = []; // ack 列表，收到的 ack 放在这里
-        this.ackcount = 0; // ack 的个数
-        this.ackblock = 0; // acklist 的大小，这个值 >= ackCount
+        this.acklist = []; // ack list, received acks are placed here
+        this.ackcount = 0; // The number of acks
+        this.ackblock = 0; // The size of acklist, this value >= ackCount
 
         this.fastresend = 0; // int
         this.nocwnd = 0; // int
@@ -404,7 +404,7 @@ export class Kcp {
 
         let latest = 0; // uint32 , the latest ack packet
         let flag = 0; // int
-        let inSegs = 0; // uint64 统计用
+        let inSegs = 0; // uint64 for statistics
         let windowSlides = false;
 
         while (true) {
@@ -475,7 +475,7 @@ export class Kcp {
                 }
                 if (regular && repeat) {
                     // do nothing
-                    // 统计重复的包
+                    // Count duplicate packages
                 }
             } else if (cmd === IKCP_CMD_WASK) {
                 // ready to send back IKCP_CMD_WINS in Ikcp_flush

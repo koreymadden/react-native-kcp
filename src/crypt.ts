@@ -1,10 +1,10 @@
 import * as crypto from 'crypto';
 
-// 初始向量 iv 的长度 n 必须在 7 到 13 之间（ n 大于等于7，n 小于等于 13 ）
+// The length n of the initial vector iv must be between 7 and 13 (n is greater than or equal to 7, n is less than or equal to 13)
 
-// 明文的长度最多是 2 ^ ( 8 * (15 - n)) 个字节
-// 最小：iv长度是13的时候，明文长度最大是 65535 字节
-// 最大：iv长度是7的时候，明文长度最大是 18446744073709551616 字节
+// The length of the plaintext is at most 2 ^ ( 8 * (15 - n)) bytes
+// Minimum: When the iv length is 13, the maximum plaintext length is 65535 bytes
+// Maximum: When the iv length is 7, the maximum plaintext length is 18446744073709551616 bytes
 
 export interface CryptBlock {
     encrypt: (plainData: Buffer) => Buffer;

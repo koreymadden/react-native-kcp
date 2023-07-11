@@ -1,11 +1,12 @@
-import dgram from 'react-native-udp';
-import { RemoteInfo, Socket } from 'dgram';
+import UdpSockets from 'react-native-udp';
+import { RemoteInfo } from 'dgram';
 import EventEmitter = require('events');
 import { fecHeaderSizePlus2, typeData, typeParity, nonceSize, mtuLimit, cryptHeaderSize, crcSize } from './common';
 import { IKCP_OVERHEAD, IKCP_SN_OFFSET, Kcp } from './kcp';
 import * as crypto from 'react-native-crypto';
 import * as crc32 from 'crc-32';
 import { CryptBlock } from './crypt';
+import UdpSocket from 'react-native-udp/lib/types/UdpSocket';
 
 function addrToString(host: string, port: number): string;
 function addrToString(rinfo: RemoteInfo): string;
@@ -21,7 +22,7 @@ export class Listener {
     block: CryptBlock; // block encryption
     // dataShards: number; // FEC data shard
     // parityShards: number; // FEC parity shard
-    conn: Socket; // the underlying packet connection
+    conn: UdpSocket; // the underlying packet connection
     ownConn: boolean; // true if we created conn internally, false if provided by caller
 
     sessions: { [key: string]: UDPSession }; // all sessions accepted by this Listener
@@ -125,7 +126,7 @@ export class Listener {
 
 export class UDPSession extends EventEmitter {
     key: string;
-    conn: Socket; // the underlying packet connection
+    conn: UdpSocket; // the underlying packet connection
     ownConn: boolean; // true if we created conn internally, false if provided by caller
     kcp: Kcp; // KCP ARQ protocol
     listener: Listener; // pointing to the Listener object if it's been accepted by a Listener
@@ -260,7 +261,8 @@ export class UDPSession extends EventEmitter {
                 buff.writeUInt32LE(checksum, nonceSize);
                 buff = this.block.encrypt(buff);
             }
-            this.conn.send(buff, this.port, this.host);
+            // this.conn.send(buff, this.port, this.host);
+            this.conn.send(buff, null, null, this.port, this.host);
         };
 
         // 1. FEC encoding
@@ -485,7 +487,7 @@ export interface ListenOptions {
 // Check https://github.com/klauspost/reedsolomon for details
 export function ListenWithOptions(opts: ListenOptions): Listener {
     const { port, block, callback } = opts;
-    const socket: any = dgram.createSocket({ type: 'udp4' });
+    const socket: UdpSocket = UdpSockets.createSocket({ type: 'udp4' });
     socket.bind(port);
     socket.on('listening', (err) => {
         if (err) {
@@ -496,11 +498,11 @@ export function ListenWithOptions(opts: ListenOptions): Listener {
 }
 
 // ServeConn serves KCP protocol for a single packet connection.
-export function ServeConn(block: any, conn: Socket, callback: ListenCallback): Listener {
+export function ServeConn(block: any, conn: UdpSocket, callback: ListenCallback): Listener {
     return serveConn(block, conn, false, callback);
 }
 
-function serveConn(block: any, conn: Socket, ownConn: boolean, callback: ListenCallback): Listener {
+function serveConn(block: any, conn: UdpSocket, ownConn: boolean, callback: ListenCallback): Listener {
     const listener = new Listener();
     listener.conn = conn;
     listener.ownConn = ownConn;
@@ -530,7 +532,7 @@ export interface DialOptions {
 // Check https://github.com/klauspost/reedsolomon for details
 export function DialWithOptions(opts: DialOptions): UDPSession {
     const { conv, port, host, block } = opts;
-    const conn = dgram.createSocket({ type: 'udp4' });
+    const conn = UdpSockets.createSocket({ type: 'udp4' });
     return newUDPSession({
         conv,
         port,

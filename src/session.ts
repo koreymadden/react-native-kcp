@@ -3,7 +3,7 @@ import { RemoteInfo, Socket } from 'dgram';
 import EventEmitter = require('events');
 import { fecHeaderSizePlus2, typeData, typeParity, nonceSize, mtuLimit, cryptHeaderSize, crcSize } from './common';
 import { IKCP_OVERHEAD, IKCP_SN_OFFSET, Kcp } from './kcp';
-import * as crypto from 'crypto-browserify';
+import * as crypto from 'react-native-crypto';
 import * as crc32 from 'crc-32';
 import { CryptBlock } from './crypt';
 

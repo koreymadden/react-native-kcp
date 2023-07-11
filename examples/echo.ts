@@ -1,5 +1,5 @@
 import { ListenWithOptions, DialWithOptions } from '../src/session';
-import * as crypto from 'crypto-browserify';
+import * as crypto from 'react-native-crypto';
 import { AesBlock } from '../src/crypt';
 import { log } from './common';
 

@@ -1,4 +1,4 @@
-import * as crypto from 'crypto-browserify';
+import * as crypto from 'react-native-crypto';
 
 export function log(...msg) {
     console.log(`[${new Date().toISOString()}]`, ...msg);

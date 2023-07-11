@@ -5,7 +5,7 @@
     "homepage": "https://github.com/koreymadden/react-native-kcp",
     "main": "./dist/index.js",
     "scripts": {
-        "build": "yarn format && yarn lint && yarn buildcode",
+        "build": "tsc",
         "format": "prettier --write \"**/*.ts\"",
         "lint": "eslint \"**/*.ts\" --fix",
         "buildcode": "tsc -p tsconfig.build.json",

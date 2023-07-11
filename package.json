@@ -1,6 +1,6 @@
 {
     "name": "react-native-kcp",
-    "version": "0.1.03",
+    "version": "0.1.04",
     "description": "React Native KCP Protocol",
     "homepage": "https://github.com/koreymadden/react-native-kcp",
     "main": "./dist/index.js",
@@ -28,6 +28,7 @@
         "prettier": "^2"
     },
     "dependencies": {
+        "@craftzdog/react-native-buffer": "^6.0.5",
         "crc-32": "^1.2.1",
         "crypto-browserify": "^3.12.0",
         "react-native-udp": "^4.1.7"
@@ -41,5 +42,8 @@
     },
     "bugs": {
         "url": "https://github.com/koreymadden/react-native-kcp/issues"
+    },
+    "resolutions": {
+        "safe-buffer": "@craftzdog/react-native-buffer"
     }
 }

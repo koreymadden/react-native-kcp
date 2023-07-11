@@ -2,7 +2,7 @@
     "name": "react-native-kcp",
     "version": "1.1.0",
     "description": "React Native KCP Protocol",
-    "homepage": "https://github.com/as3long/kcpjs",
+    "homepage": "https://github.com/koreymadden/react-native-kcp",
     "main": "./dist/index.js",
     "scripts": {
         "build": "yarn format && yarn lint && yarn buildcode",
@@ -17,7 +17,7 @@
         "react",
         "native"
     ],
-    "author": "maddenkorey@gmail.com",
+    "author": "korey.madden@headsight.com",
     "license": "MIT",
     "devDependencies": {
         "@types/jest": "^26",

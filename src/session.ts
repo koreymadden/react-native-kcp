@@ -1,4 +1,5 @@
-import * as dgram from 'dgram';
+import dgram from 'react-native-udp';
+import { RemoteInfo, Socket } from 'dgram';
 import EventEmitter = require('events');
 import { fecHeaderSizePlus2, typeData, typeParity, nonceSize, mtuLimit, cryptHeaderSize, crcSize } from './common';
 import { IKCP_OVERHEAD, IKCP_SN_OFFSET, Kcp } from './kcp';
@@ -7,8 +8,8 @@ import * as crc32 from 'crc-32';
 import { CryptBlock } from './crypt';
 
 function addrToString(host: string, port: number): string;
-function addrToString(rinfo: dgram.RemoteInfo): string;
-function addrToString(arg1: dgram.RemoteInfo | string, arg2?: number): string {
+function addrToString(rinfo: RemoteInfo): string;
+function addrToString(arg1: RemoteInfo | string, arg2?: number): string {
     if (typeof arg1 === 'string') {
         return `${arg1}:${arg2}`;
     } else {
@@ -20,7 +21,7 @@ export class Listener {
     block: CryptBlock; // block encryption
     // dataShards: number; // FEC data shard
     // parityShards: number; // FEC parity shard
-    conn: dgram.Socket; // the underlying packet connection
+    conn: Socket; // the underlying packet connection
     ownConn: boolean; // true if we created conn internally, false if provided by caller
 
     sessions: { [key: string]: UDPSession }; // all sessions accepted by this Listener
@@ -28,7 +29,7 @@ export class Listener {
     callback: ListenCallback;
 
     // packet input stage
-    private packetInput(data: Buffer, rinfo: dgram.RemoteInfo) {
+    private packetInput(data: Buffer, rinfo: RemoteInfo) {
         let decrypted = false;
         if (this.block && data.byteLength >= cryptHeaderSize) {
             data = this.block.decrypt(data);
@@ -38,7 +39,7 @@ export class Listener {
                 decrypted = true;
             } else {
                 // do nothing
-                // test failed 
+                // test failed
             }
         } else if (!this.block) {
             decrypted = true;
@@ -116,7 +117,7 @@ export class Listener {
     }
 
     monitor() {
-        this.conn.on('message', (msg: Buffer, rinfo: dgram.RemoteInfo) => {
+        this.conn.on('message', (msg: Buffer, rinfo: RemoteInfo) => {
             this.packetInput(msg, rinfo);
         });
     }
@@ -124,7 +125,7 @@ export class Listener {
 
 export class UDPSession extends EventEmitter {
     key: string;
-    conn: dgram.Socket; // the underlying packet connection
+    conn: Socket; // the underlying packet connection
     ownConn: boolean; // true if we created conn internally, false if provided by caller
     kcp: Kcp; // KCP ARQ protocol
     listener: Listener; // pointing to the Listener object if it's been accepted by a Listener
@@ -484,7 +485,7 @@ export interface ListenOptions {
 // Check https://github.com/klauspost/reedsolomon for details
 export function ListenWithOptions(opts: ListenOptions): Listener {
     const { port, block, callback } = opts;
-    const socket = dgram.createSocket('udp4');
+    const socket: any = dgram.createSocket({ type: 'udp4' });
     socket.bind(port);
     socket.on('listening', (err) => {
         if (err) {
@@ -495,11 +496,11 @@ export function ListenWithOptions(opts: ListenOptions): Listener {
 }
 
 // ServeConn serves KCP protocol for a single packet connection.
-export function ServeConn(block: any, conn: dgram.Socket, callback: ListenCallback): Listener {
+export function ServeConn(block: any, conn: Socket, callback: ListenCallback): Listener {
     return serveConn(block, conn, false, callback);
 }
 
-function serveConn(block: any, conn: dgram.Socket, ownConn: boolean, callback: ListenCallback): Listener {
+function serveConn(block: any, conn: Socket, ownConn: boolean, callback: ListenCallback): Listener {
     const listener = new Listener();
     listener.conn = conn;
     listener.ownConn = ownConn;
@@ -529,7 +530,7 @@ export interface DialOptions {
 // Check https://github.com/klauspost/reedsolomon for details
 export function DialWithOptions(opts: DialOptions): UDPSession {
     const { conv, port, host, block } = opts;
-    const conn = dgram.createSocket('udp4');
+    const conn = dgram.createSocket({ type: 'udp4' });
     return newUDPSession({
         conv,
         port,

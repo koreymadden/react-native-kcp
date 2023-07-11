@@ -1,4 +1,4 @@
-# kcp-js
+# react-native-kcp
 
 ### Pure JavaScript Implementation of the KCP Protocol.
 

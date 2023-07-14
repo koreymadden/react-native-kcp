@@ -536,7 +536,8 @@ export interface DialOptions {
 // Check https://github.com/klauspost/reedsolomon for details
 export function DialWithOptions(opts: DialOptions, nativeSocket: UdpSocket): UDPSession {
     const { conv, port, host, block } = opts;
-    console.log('what is this?', nativeSocket);
+    console.log('[REACT NATIVE SOCKET]', nativeSocket);
+    console.log('[BLOCK]', block);
     const conn = nativeSocket;
     return newUDPSession({
         conv,

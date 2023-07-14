@@ -1,4 +1,5 @@
-import UdpSockets from 'react-native-udp';
+// @ts-nocheck
+
 import { RemoteInfo } from 'dgram';
 import EventEmitter = require('events');
 import { fecHeaderSizePlus2, typeData, typeParity, nonceSize, mtuLimit, cryptHeaderSize, crcSize } from './common';
@@ -7,6 +8,8 @@ import * as crypto from 'react-native-crypto';
 import * as crc32 from 'crc-32';
 import { CryptBlock } from './crypt';
 import UdpSocket from 'react-native-udp/lib/types/UdpSocket';
+
+global.Buffer = require('buffer').Buffer;
 
 function addrToString(host: string, port: number): string;
 function addrToString(rinfo: RemoteInfo): string;
@@ -470,8 +473,8 @@ function newUDPSession(args: {
 export type ListenCallback = (session: UDPSession) => void;
 
 // Listen listens for incoming KCP packets addressed to the local address laddr on the network "udp",
-export function Listen(port: number, callback: ListenCallback): any {
-    return ListenWithOptions({ port, callback });
+export function Listen(port: number, callback: ListenCallback, nativeSocket: UdpSocket): any {
+    return ListenWithOptions({ port, callback }, nativeSocket);
 }
 
 export interface ListenOptions {
@@ -485,9 +488,10 @@ export interface ListenOptions {
 // 'block' is the block encryption algorithm to encrypt packets.
 //
 // Check https://github.com/klauspost/reedsolomon for details
-export function ListenWithOptions(opts: ListenOptions): Listener {
+export function ListenWithOptions(opts: ListenOptions, nativeSocket: UdpSocket): Listener {
     const { port, block, callback } = opts;
-    const socket: UdpSocket = UdpSockets.createSocket({ type: 'udp4' });
+    console.log('[REACT NATIVE SOCKET]:', nativeSocket);
+    const socket: UdpSocket = nativeSocket;
     socket.bind(port);
     socket.on('listening', (err) => {
         if (err) {
@@ -514,8 +518,8 @@ function serveConn(block: any, conn: UdpSocket, ownConn: boolean, callback: List
 }
 
 // Dial connects to the remote address "raddr" on the network "udp" without encryption and FEC
-export function Dial(conv: number, port: number, host: string): any {
-    return DialWithOptions({ conv, port, host });
+export function Dial(conv: number, port: number, host: string, nativeSocket: UdpSocket): any {
+    return DialWithOptions({ conv, port, host }, nativeSocket);
 }
 
 export interface DialOptions {
@@ -530,9 +534,10 @@ export interface DialOptions {
 // 'block' is the block encryption algorithm to encrypt packets.
 //
 // Check https://github.com/klauspost/reedsolomon for details
-export function DialWithOptions(opts: DialOptions): UDPSession {
+export function DialWithOptions(opts: DialOptions, nativeSocket: UdpSocket): UDPSession {
     const { conv, port, host, block } = opts;
-    const conn = UdpSockets.createSocket({ type: 'udp4' });
+    console.log('what is this?', nativeSocket);
+    const conn = nativeSocket;
     return newUDPSession({
         conv,
         port,

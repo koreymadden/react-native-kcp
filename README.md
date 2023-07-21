@@ -68,24 +68,18 @@ npm install react-native-kcp
 # Server Example
 
 ```ts
-import dgram from 'react-native-udp';
-import { ListenWithOptions } from 'react-native-kcp';
-
-const port = 3333;
-
 export const kcpServer = () => {
     const socketInstance = dgram.createSocket({ type: 'udp4' });
     socketInstance.bind(port);
-
     const listener = ListenWithOptions(
         {
             port,
             callback: (session) => {
-                console.log('callback here');
                 session.on('recv', (buff: Buffer) => {
-                    console.log('[MESSAGE RECEIVED FROM CLIENT]:', buff.toString());
-                    console.log('[SENDING MESSAGE BACK]:', `[GREETINGS FROM HOST]: ${buff.toString()}`);
-                    session.write(buff);
+                    const messageFromClient = buff.toString();
+                    console.debug('[MESSAGE RECEIVED FROM CLIENT]:', messageFromClient);
+                    console.debug('[SENDING MESSAGE BACK]');
+                    session.write(Buffer.from(`[GREETINGS FROM HOST]: ${messageFromClient}`));
                 });
             },
         },
@@ -110,21 +104,21 @@ export const kcpClient = () => {
 
     const socket = DialWithOptions(
         {
-            conv: conv,
-            host: host,
-            port: port,
+            conv,
+            host,
+            port,
         },
         socketInstance,
     );
 
     socket.on('recv', (buff: Buffer) => {
-        console.log('[RECEIVED KCP MESSAGE]:', buff.toString());
+        console.debug('[RECEIVED KCP MESSAGE]:', buff.toString());
     });
 
     setInterval(() => {
         const msg = Buffer.from(new Date().toISOString());
-        console.log(`[SENDING KCP MESSAGE]: ${msg.toString()}`);
-        console.log('[DESTINATION]:', `${socket.host}:${socket.port}`);
+        console.debug(`[SENDING MESSAGE]: ${msg.toString()}`);
+        console.debug('[DESTINATION]:', `${socket.host}:${socket.port}`);
         socket.write(msg);
     }, 5000);
 };

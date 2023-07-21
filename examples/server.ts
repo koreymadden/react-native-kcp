@@ -7,16 +7,15 @@ const port = 3333;
 export const kcpServer = () => {
     const socketInstance = dgram.createSocket({ type: 'udp4' });
     socketInstance.bind(port);
-
     const listener = ListenWithOptions(
         {
             port,
             callback: (session) => {
-                console.log('callback here');
                 session.on('recv', (buff: Buffer) => {
-                    console.log('[MESSAGE RECEIVED FROM CLIENT]:', buff.toString());
-                    console.log('[SENDING MESSAGE BACK]:', `[GREETINGS FROM HOST]: ${buff.toString()}`);
-                    session.write(buff);
+                    const messageFromClient = buff.toString();
+                    console.debug('[MESSAGE RECEIVED FROM CLIENT]:', messageFromClient);
+                    console.debug('[SENDING MESSAGE BACK]');
+                    session.write(Buffer.from(`[GREETINGS FROM HOST]: ${messageFromClient}`));
                 });
             },
         },

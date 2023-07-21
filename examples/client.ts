@@ -12,21 +12,21 @@ export const kcpClient = () => {
 
     const socket = DialWithOptions(
         {
-            conv: conv,
-            host: host,
-            port: port,
+            conv,
+            host,
+            port,
         },
         socketInstance,
     );
 
     socket.on('recv', (buff: Buffer) => {
-        console.log('[RECEIVED KCP MESSAGE]:', buff.toString());
+        console.debug('[RECEIVED KCP MESSAGE]:', buff.toString());
     });
 
     setInterval(() => {
         const msg = Buffer.from(new Date().toISOString());
-        console.log(`[SENDING KCP MESSAGE]: ${msg.toString()}`);
-        console.log('[DESTINATION]:', `${socket.host}:${socket.port}`);
+        console.debug(`[SENDING MESSAGE]: ${msg.toString()}`);
+        console.debug('[DESTINATION]:', `${socket.host}:${socket.port}`);
         socket.write(msg);
     }, 5000);
 };

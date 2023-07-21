@@ -1,6 +1,6 @@
 {
     "name": "react-native-kcp",
-    "version": "0.1.20",
+    "version": "0.1.21",
     "description": "React Native KCP Protocol",
     "homepage": "https://github.com/koreymadden/react-native-kcp",
     "main": "./dist/index.js",
@@ -13,7 +13,6 @@
     },
     "keywords": [
         "kcp",
-        "pure",
         "react",
         "native"
     ],

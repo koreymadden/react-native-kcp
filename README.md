@@ -1,45 +1,117 @@
 # react-native-kcp
 
-### Pure JavaScript Implementation of the KCP Protocol.
+### React Native Implementation of the [KCP Protocol](https://github.com/skywind3000/kcp).
 
 [![JavaScript KCP](https://img.shields.io/badge/Powered_By-KCP-293C81?style=for-the-badge&logo=JavaScript&logoColor=FFFFFF)](https://reactnative.dev/docs/environment-setup)
 
 Code from [bruce48x/kcpjs](https://github.com/bruce48x/kcpjs) and [as3long/kcpjs](https://github.com/as3long/kcpjs).
 
-> Note: The forward error correction (FEC) feature has been removed from the codebase due to the presence of C++ code.
-
-# Example 1
-```sh
-ts-node examples/echo.ts
-```
-
-# Example 2
-```sh
-ts-node examples/server.ts
-ts-node examples/client.ts
-```
+> Note: The forward error correction (FEC) feature has been removed from the codebase due to the presence of C++ code. Encrytion is also not supported with this package.
 
 # API
 
 ## Create Server
-```ListenWithOptions```
 
-#### Parameters
+`ListenWithOptions`
 
-| Option | Description |
-| ------ | ----------- |
-| port | Listening port. |
-| block | Encryption module. |
-| callback | Callback for successful client connection. |
+### Parameters
+
+| Parameter  | Type      | Description                                                                                             |
+| ---------- | --------- | ------------------------------------------------------------------------------------------------------- |
+| Options    | object    | Options to configure KCP server.                                                                        |
+| UDP Socket | UdpSocket | Socket created by [react-native-udp](https://github.com/tradle/react-native-udp/blob/master/README.md). |
+
+#### Options Object Properties
+
+| Property | Type           | Description                           |
+| -------- | -------------- | ------------------------------------- |
+| port     | number         | Listening port.                       |
+| callback | ListenCallback | Callback when UDP Session is created. |
+
+> Note: You will need to make sure to bind the socket before you pass it into the ListenWithOptions function.
 
 ## Create Client
-```DialWithOptions```
 
-#### Parameters
+`DialWithOptions`
 
-| Option | Description |
-| ------ | ----------- |
-| host | Server address. |
-| port | Server port. |
-| conv | Session ID. |
-| block | Encryption module. |
+### Parameters
+
+| Parameter  | Type      | Description                                                                                             |
+| ---------- | --------- | ------------------------------------------------------------------------------------------------------- |
+| Options    | object    | Options to configure KCP client.                                                                        |
+| UDP Socket | UdpSocket | Socket created by [react-native-udp](https://github.com/tradle/react-native-udp/blob/master/README.md). |
+
+> Note: You will need to make sure to bind the socket before you pass it into the DialWithOptions function.
+
+#### Options Object Properties
+
+| Property | Type   | Description     |
+| -------- | ------ | --------------- |
+| host     | string | Server address. |
+| port     | number | Server port.    |
+| conv     | number | Session ID.     |
+
+# Server Example
+
+```ts
+import dgram from 'react-native-udp';
+import { ListenWithOptions } from 'react-native-kcp';
+
+const port = 3333;
+
+export const kcpServer = () => {
+    const socketInstance = dgram.createSocket({ type: 'udp4' });
+    socketInstance.bind(port);
+
+    const listener = ListenWithOptions(
+        {
+            port,
+            callback: (session) => {
+                console.log('callback here');
+                session.on('recv', (buff: Buffer) => {
+                    console.log('[MESSAGE RECEIVED FROM CLIENT]:', buff.toString());
+                    console.log('[SENDING MESSAGE BACK]:', `[GREETINGS FROM HOST]: ${buff.toString()}`);
+                    session.write(buff);
+                });
+            },
+        },
+        socketInstance,
+    );
+};
+```
+
+# Client Example
+
+```ts
+import dgram from 'react-native-udp';
+import { DialWithOptions } from 'react-native-kcp';
+
+const host = '10.104.15.237';
+const port = 3333;
+const conv = 255;
+
+export const kcpClient = () => {
+    const socketInstance = dgram.createSocket({ type: 'udp4' });
+    socketInstance.bind(port);
+
+    const socket = DialWithOptions(
+        {
+            conv: conv,
+            host: host,
+            port: port,
+        },
+        socketInstance,
+    );
+
+    socket.on('recv', (buff: Buffer) => {
+        console.log('[RECEIVED KCP MESSAGE]:', buff.toString());
+    });
+
+    setInterval(() => {
+        const msg = Buffer.from(new Date().toISOString());
+        console.log(`[SENDING KCP MESSAGE]: ${msg.toString()}`);
+        console.log('[DESTINATION]:', `${socket.host}:${socket.port}`);
+        socket.write(msg);
+    }, 5000);
+};
+```

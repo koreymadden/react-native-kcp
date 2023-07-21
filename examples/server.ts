@@ -1,20 +1,25 @@
-import { ListenWithOptions } from '../src/session';
-import { AesBlock } from '../src/crypt';
-import { port, algorithm, key, iv } from './common';
+//@ts-nocheck
+import dgram from 'react-native-udp';
+import { ListenWithOptions } from 'react-native-kcp';
 
-let block;
-if (algorithm && key && iv) {
-    block = new AesBlock(algorithm, key, iv);
-}
+const port = 3333;
 
-// server
-const listener = ListenWithOptions({
-    port,
-    block,
-    callback: (session) => {
-        // accept new session
-        session.on('recv', (buff: Buffer) => {
-            session.write(buff);
-        });
-    },
-});
+export const kcpServer = () => {
+    const socketInstance = dgram.createSocket({ type: 'udp4' });
+    socketInstance.bind(port);
+
+    const listener = ListenWithOptions(
+        {
+            port,
+            callback: (session) => {
+                console.log('callback here');
+                session.on('recv', (buff: Buffer) => {
+                    console.log('[MESSAGE RECEIVED FROM CLIENT]:', buff.toString());
+                    console.log('[SENDING MESSAGE BACK]:', `[GREETINGS FROM HOST]: ${buff.toString()}`);
+                    session.write(buff);
+                });
+            },
+        },
+        socketInstance,
+    );
+};

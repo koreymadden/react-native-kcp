@@ -1,24 +1,32 @@
-import { DialWithOptions } from '../src/session';
-import { AesBlock } from '../src/crypt';
-import { log, host, port, conv, algorithm, key, iv } from './common';
+//@ts-nocheck
+import dgram from 'react-native-udp';
+import { DialWithOptions } from 'react-native-kcp';
 
-let block;
-if (algorithm && key && iv) {
-    block = new AesBlock(algorithm, key, iv);
-}
+const host = '10.104.15.237';
+const port = 3333;
+const conv = 255;
 
-// client
-const session = DialWithOptions({
-    conv,
-    port,
-    host,
-    block,
-});
-session.on('recv', (buff: Buffer) => {
-    log('recv:', buff.toString());
-});
-setInterval(() => {
-    const msg = Buffer.from(new Date().toISOString());
-    log(`send: ${msg}`);
-    session.write(msg);
-}, 1000);
+export const kcpClient = () => {
+    const socketInstance = dgram.createSocket({ type: 'udp4' });
+    socketInstance.bind(port);
+
+    const socket = DialWithOptions(
+        {
+            conv: conv,
+            host: host,
+            port: port,
+        },
+        socketInstance,
+    );
+
+    socket.on('recv', (buff: Buffer) => {
+        console.log('[RECEIVED KCP MESSAGE]:', buff.toString());
+    });
+
+    setInterval(() => {
+        const msg = Buffer.from(new Date().toISOString());
+        console.log(`[SENDING KCP MESSAGE]: ${msg.toString()}`);
+        console.log('[DESTINATION]:', `${socket.host}:${socket.port}`);
+        socket.write(msg);
+    }, 5000);
+};

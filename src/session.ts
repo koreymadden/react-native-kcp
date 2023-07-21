@@ -491,15 +491,15 @@ export interface ListenOptions {
 // Check https://github.com/klauspost/reedsolomon for details
 export function ListenWithOptions(opts: ListenOptions, nativeSocket: UdpSocket): Listener {
     const { port, block, callback } = opts;
-    console.log('[REACT NATIVE SOCKET]:', nativeSocket);
-    const socket: UdpSocket = nativeSocket;
-    socket.bind(port);
-    socket.on('listening', (err) => {
+    // console.debug('[LISTEN WITH OPTIONS]:', opts);
+    // console.debug('[NATIVE SOCKET]:', nativeSocket);
+    const conn: UdpSocket = nativeSocket;
+    conn.on('listening', (err) => {
         if (err) {
             console.error('[ERROR]:', err);
         }
     });
-    return serveConn(block, socket, true, callback);
+    return serveConn(block, conn, true, callback);
 }
 
 // ServeConn serves KCP protocol for a single packet connection.
@@ -537,8 +537,8 @@ export interface DialOptions {
 // Check https://github.com/klauspost/reedsolomon for details
 export function DialWithOptions(opts: DialOptions, nativeSocket: UdpSocket): UDPSession {
     const { conv, port, host, block } = opts;
-    console.log('[REACT NATIVE SOCKET]', nativeSocket);
-    console.log('[BLOCK]', block);
+    // console.debug('[DIAL WITH OPTIONS]:', opts);
+    // console.debug('[NATIVE SOCKET]:', nativeSocket);
     const conn = nativeSocket;
     return newUDPSession({
         conv,

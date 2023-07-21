@@ -265,7 +265,8 @@ export class UDPSession extends EventEmitter {
                 buff = this.block.encrypt(buff);
             }
             // this.conn.send(buff, this.port, this.host);
-            this.conn.send(buff, null, null, this.port, this.host);
+            // this.conn.send(buff, null, null, this.port, this.host);
+            this.conn.send(buff, 0, buff.length, this.port, this.host);
         };
 
         // 1. FEC encoding
@@ -495,7 +496,7 @@ export function ListenWithOptions(opts: ListenOptions, nativeSocket: UdpSocket):
     socket.bind(port);
     socket.on('listening', (err) => {
         if (err) {
-            console.error(err);
+            console.error('[ERROR]:', err);
         }
     });
     return serveConn(block, socket, true, callback);

@@ -1,8 +1,7 @@
 import { RemoteInfo } from 'dgram';
 import EventEmitter = require('events');
-import { fecHeaderSizePlus2, typeData, typeParity, nonceSize, mtuLimit, cryptHeaderSize } from './common';
+import { fecHeaderSizePlus2, typeData, typeParity, mtuLimit } from './common';
 import { IKCP_OVERHEAD, IKCP_SN_OFFSET, Kcp } from './kcp';
-import { CryptBlock } from './crypt';
 import UdpSocket from 'react-native-udp/lib/types/UdpSocket';
 
 global.Buffer = require('buffer').Buffer;
@@ -18,9 +17,6 @@ function addrToString(arg1: RemoteInfo | string, arg2?: number): string {
 }
 
 export class Listener {
-    block: CryptBlock; // block encryption
-    // dataShards: number; // FEC data shard
-    // parityShards: number; // FEC parity shard
     conn: UdpSocket; // the underlying packet connection
     ownConn: boolean; // true if we created conn internally, false if provided by caller
 
@@ -39,7 +35,7 @@ export class Listener {
 
             const fecFlag = data.readUInt16LE(4);
             if (fecFlag == typeData || fecFlag == typeParity) {
-                // 16bit kcp cmd [81-84] and frg [0-255] will not overlap with FEC type 0x00f1 0x00f2
+                // 16 bit kcp cmd [81-84] and frg [0-255] will not overlap with FEC type 0x00f1 0x00f2
                 // packet with FEC
                 if (fecFlag == typeData && data.byteLength >= fecHeaderSizePlus2 + IKCP_OVERHEAD) {
                     conv = data.readUInt32LE(fecHeaderSizePlus2);
@@ -74,7 +70,6 @@ export class Listener {
                     listener: this,
                     conn: this.conn,
                     ownConn: false,
-                    block: this.block,
                 });
                 sess.key = key;
                 this.sessions[key] = sess;
@@ -112,7 +107,6 @@ export class UDPSession extends EventEmitter {
     ownConn: boolean; // true if we created conn internally, false if provided by caller
     kcp: Kcp; // KCP ARQ protocol
     listener: Listener; // pointing to the Listener object if it's been accepted by a Listener
-    block: CryptBlock; // BlockCrypt block encryption object
 
     // kcp receiving is based on packets
     // recvbuf turns packets into stream
@@ -215,10 +209,6 @@ export class UDPSession extends EventEmitter {
         this.kcp.setNoDelay(nodelay, interval, resend, nc);
     }
 
-    // post-processing for sending a packet from kcp core steps
-    // 1. FEC packet generation
-    // 2. CRC32 integrity
-    // 3. Encryption
     output(buf: Buffer) {
         const doOutput = (buff: Buffer) => {
             // this.conn.send(buff, this.port, this.host);
@@ -292,16 +282,14 @@ function newUDPSession(args: {
     listener: Listener;
     conn: any;
     ownConn: boolean;
-    block: CryptBlock;
 }): UDPSession {
-    const { conv, port, host, listener, conn, ownConn, block } = args;
+    const { conv, port, host, listener, conn, ownConn } = args;
     const sess = new UDPSession();
     sess.port = port;
     sess.host = host;
     sess.conn = conn;
     sess.ownConn = ownConn;
     sess.listener = listener;
-    sess.block = block;
     sess.recvbuf = Buffer.alloc(mtuLimit);
 
     sess.kcp = new Kcp(conv, sess);
@@ -351,7 +339,6 @@ function serveConn(conn: UdpSocket, ownConn: boolean, callback: ListenCallback):
     listener.conn = conn;
     listener.ownConn = ownConn;
     listener.sessions = {};
-    listener.block = undefined;
     listener.callback = callback;
     listener.monitor();
     return listener;
@@ -375,6 +362,5 @@ export function DialWithOptions(opts: DialOptions, nativeSocket: UdpSocket): UDP
         listener: undefined,
         conn,
         ownConn: true,
-        block: undefined,
     });
 }

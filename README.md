@@ -1,12 +1,26 @@
 # react-native-kcp
 
-### React Native Implementation of the [KCP Protocol](https://github.com/skywind3000/kcp).
+### React Native Implementation of the [KCP Protocol](kcp).
 
 [![JavaScript KCP](https://img.shields.io/badge/Powered_By-KCP-293C81?style=for-the-badge&logo=JavaScript&logoColor=FFFFFF)](https://reactnative.dev/docs/environment-setup)
 
 Code from [bruce48x/kcpjs](https://github.com/bruce48x/kcpjs) and [as3long/kcpjs](https://github.com/as3long/kcpjs).
 
 > Note: The forward error correction (FEC) feature has been removed from the codebase due to the presence of C++ code. Encrytion is also not supported with this package.
+
+# Installation
+
+### Install react-native-udp library
+
+```
+npm install react-native-udp
+```
+
+### Install react-native-kcp library
+
+```
+npm install react-native-kcp
+```
 
 # API
 
@@ -16,10 +30,10 @@ Code from [bruce48x/kcpjs](https://github.com/bruce48x/kcpjs) and [as3long/kcpjs
 
 ### Parameters
 
-| Parameter  | Type      | Description                                                                                             |
-| ---------- | --------- | ------------------------------------------------------------------------------------------------------- |
-| Options    | object    | Options to configure KCP server.                                                                        |
-| UDP Socket | UdpSocket | Socket created by [react-native-udp](https://github.com/tradle/react-native-udp/blob/master/README.md). |
+| Parameter  | Type      | Description                                             |
+| ---------- | --------- | ------------------------------------------------------- |
+| Options    | object    | Options to configure KCP server.                        |
+| UDP Socket | UdpSocket | Socket created by [react-native-udp](react-native-udp). |
 
 #### Options Object Properties
 
@@ -36,10 +50,10 @@ Code from [bruce48x/kcpjs](https://github.com/bruce48x/kcpjs) and [as3long/kcpjs
 
 ### Parameters
 
-| Parameter  | Type      | Description                                                                                             |
-| ---------- | --------- | ------------------------------------------------------------------------------------------------------- |
-| Options    | object    | Options to configure KCP client.                                                                        |
-| UDP Socket | UdpSocket | Socket created by [react-native-udp](https://github.com/tradle/react-native-udp/blob/master/README.md). |
+| Parameter  | Type      | Description                                             |
+| ---------- | --------- | ------------------------------------------------------- |
+| Options    | object    | Options to configure KCP client.                        |
+| UDP Socket | UdpSocket | Socket created by [react-native-udp](react-native-udp). |
 
 > Note: You will need to make sure to bind the socket before you pass it into the DialWithOptions function.
 
@@ -115,3 +129,6 @@ export const kcpClient = () => {
     }, 5000);
 };
 ```
+
+[kcp]: https://github.com/skywind3000/kcp
+[react-native-udp]: https://github.com/tradle/react-native-udp/blob/master/README

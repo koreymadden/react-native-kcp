@@ -26,38 +26,31 @@ npm install react-native-kcp
 
 ## Create Server
 
-`ListenWithOptions`
+`Listen`
 
 ### Parameters
 
-| Parameter  | Type      | Description                                             |
-| ---------- | --------- | ------------------------------------------------------- |
-| Options    | object    | Options to configure KCP server.                        |
-| UDP Socket | UdpSocket | Socket created by [react-native-udp](react-native-udp). |
+| Parameter  | Type           | Description                                             |
+| ---------- | -------------- | ------------------------------------------------------- |
+| UDP Socket | UdpSocket      | Socket created by [react-native-udp](react-native-udp). |
+| Callback   | ListenCallback | Callback when UDP Session is created.                   |
 
-#### Options Object Properties
-
-| Property | Type           | Description                           |
-| -------- | -------------- | ------------------------------------- |
-| port     | number         | Listening port.                       |
-| callback | ListenCallback | Callback when UDP Session is created. |
-
-> Note: You will need to make sure to bind the socket before you pass it into the ListenWithOptions function.
+> Note: You will need to make sure to bind the socket before you pass it into the Listen function.
 
 ## Create Client
 
-`DialWithOptions`
+`Dial`
 
 ### Parameters
 
-| Parameter  | Type      | Description                                             |
-| ---------- | --------- | ------------------------------------------------------- |
-| Options    | object    | Options to configure KCP client.                        |
-| UDP Socket | UdpSocket | Socket created by [react-native-udp](react-native-udp). |
+| Parameter  | Type        | Description                                             |
+| ---------- | ----------- | ------------------------------------------------------- |
+| UDP Socket | UdpSocket   | Socket created by [react-native-udp](react-native-udp). |
+| Options    | DialOptions | Options to configure KCP client.                        |
 
-> Note: You will need to make sure to bind the socket before you pass it into the DialWithOptions function.
+> Note: You will need to make sure to bind the socket before you pass it into the Dial function.
 
-#### Options Object Properties
+#### DialOptions Properties
 
 | Property | Type   | Description     |
 | -------- | ------ | --------------- |

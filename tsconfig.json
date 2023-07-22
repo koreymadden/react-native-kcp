@@ -2,27 +2,24 @@
     "compilerOptions": {
         "typeRoots": ["./node_modules/@types"],
         "types": ["node", "jest"],
-        "module": "commonjs", // Specifies which module system code to generate.
+        "module": "commonjs",
         "target": "es2020",
         "lib": ["es2020", "esnext.asynciterable"],
-        "declaration": true, // Generates corresponding '.d.ts' file.
-        "noImplicitAny": false, // Error reported on expressions and declarations with implicit 'any' type.
+        "declaration": true,
+        "noImplicitAny": false,
         "noImplicitThis": false,
         "inlineSourceMap": false,
         "downlevelIteration": true,
         "baseUrl": "./src",
-        "rootDir": "./src", // Redirect the output directory.
-        "outDir": "./dist", // Redirect the output directory.
+        "outDir": "./dist",
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
-        "charset": "utf8",
-        "newLine": "LF", // Keep line breaks are /n.
+        "newLine": "LF",
         "moduleResolution": "node",
-        "preserveConstEnums": true,
-        "watch": false // Run the compiler in watch mode. Output files are watched and recompiled when they change.
+        "preserveConstEnums": true
     },
-    "include": ["./**/*.ts"],
-    "exclude": ["node_modules", "**/*.d.ts", "./examples/**/*.*", "./dist/**/*.*"],
+    "include": ["src/**/*.ts"],
+    "exclude": ["node_modules", "**/*.d.ts", "examples/**/*", "dist/**/*"],
     "typeAcquisition": {
         "include": ["jest"]
     }

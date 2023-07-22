@@ -19,7 +19,7 @@
         "preserveConstEnums": true
     },
     "include": ["src/**/*.ts"],
-    "exclude": ["node_modules", "**/*.d.ts", "examples/**/*", "dist/**/*"],
+    "exclude": ["node_modules", "examples/**/*"],
     "typeAcquisition": {
         "include": ["jest"]
     }

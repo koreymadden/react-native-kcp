@@ -68,23 +68,21 @@ npm install react-native-kcp
 # Server Example
 
 ```ts
+import dgram from 'react-native-udp';
+import { Listen } from 'react-native-kcp';
+
 export const kcpServer = () => {
     const socketInstance = dgram.createSocket({ type: 'udp4' });
     socketInstance.bind(port);
-    const listener = ListenWithOptions(
-        {
-            port,
-            callback: (session) => {
-                session.on('recv', (buff: Buffer) => {
-                    const messageFromClient = buff.toString();
-                    console.debug('[MESSAGE RECEIVED FROM CLIENT]:', messageFromClient);
-                    console.debug('[SENDING MESSAGE BACK]');
-                    session.write(Buffer.from(`[GREETINGS FROM HOST]: ${messageFromClient}`));
-                });
-            },
-        },
-        socketInstance,
-    );
+
+    const listener = Listen(socketInstance, (session) => {
+        session.on('recv', (buff: Buffer) => {
+            const messageFromClient = buff.toString();
+            console.debug('[MESSAGE RECEIVED FROM CLIENT]:', messageFromClient);
+            console.debug('[SENDING MESSAGE BACK]');
+            session.write(Buffer.from(`[GREETINGS FROM HOST]: ${messageFromClient}`));
+        });
+    });
 };
 ```
 
@@ -92,34 +90,27 @@ export const kcpServer = () => {
 
 ```ts
 import dgram from 'react-native-udp';
-import { DialWithOptions } from 'react-native-kcp';
-
-const host = '10.104.15.237';
-const port = 3333;
-const conv = 255;
+import { Dial } from 'react-native-kcp';
 
 export const kcpClient = () => {
     const socketInstance = dgram.createSocket({ type: 'udp4' });
     socketInstance.bind(port);
 
-    const socket = DialWithOptions(
-        {
-            conv,
-            host,
-            port,
-        },
-        socketInstance,
-    );
+    const socket = Dial(socketInstance, {
+        conv,
+        host,
+        port,
+    });
 
     socket.on('recv', (buff: Buffer) => {
         console.debug('[RECEIVED KCP MESSAGE]:', buff.toString());
     });
 
     setInterval(() => {
-        const msg = Buffer.from(new Date().toISOString());
-        console.debug(`[SENDING MESSAGE]: ${msg.toString()}`);
+        const message = Buffer.from(new Date().toISOString());
+        console.debug(`[SENDING MESSAGE]: ${message.toString()}`);
         console.debug('[DESTINATION]:', `${socket.host}:${socket.port}`);
-        socket.write(msg);
+        socket.write(message);
     }, 5000);
 };
 ```

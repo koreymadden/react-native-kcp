@@ -1,12 +1,7 @@
-// @ts-nocheck
-
 import { RemoteInfo } from 'dgram';
 import EventEmitter = require('events');
-import { fecHeaderSizePlus2, typeData, typeParity, nonceSize, mtuLimit, cryptHeaderSize, crcSize } from './common';
+import { fecHeaderSizePlus2, typeData, typeParity, mtuLimit } from './common';
 import { IKCP_OVERHEAD, IKCP_SN_OFFSET, Kcp } from './kcp';
-import * as crypto from 'react-native-crypto';
-import * as crc32 from 'crc-32';
-import { CryptBlock } from './crypt';
 import UdpSocket from 'react-native-udp/lib/types/UdpSocket';
 
 global.Buffer = require('buffer').Buffer;
@@ -22,9 +17,6 @@ function addrToString(arg1: RemoteInfo | string, arg2?: number): string {
 }
 
 export class Listener {
-    block: CryptBlock; // block encryption
-    // dataShards: number; // FEC data shard
-    // parityShards: number; // FEC parity shard
     conn: UdpSocket; // the underlying packet connection
     ownConn: boolean; // true if we created conn internally, false if provided by caller
 
@@ -34,23 +26,8 @@ export class Listener {
 
     // packet input stage
     private packetInput(data: Buffer, rinfo: RemoteInfo) {
-        let decrypted = false;
-        if (this.block && data.byteLength >= cryptHeaderSize) {
-            data = this.block.decrypt(data);
-            const checksum = crc32.buf(data.slice(cryptHeaderSize)) >>> 0;
-            if (checksum === data.readUInt32LE(nonceSize)) {
-                data = data.slice(cryptHeaderSize);
-                decrypted = true;
-            } else {
-                // do nothing
-                // test failed
-            }
-        } else if (!this.block) {
-            decrypted = true;
-        }
-
         const key = addrToString(rinfo);
-        if (decrypted && data.byteLength >= IKCP_OVERHEAD) {
+        if (data.byteLength >= IKCP_OVERHEAD) {
             let sess = this.sessions[key];
             let conv = 0;
             let sn = 0;
@@ -58,7 +35,7 @@ export class Listener {
 
             const fecFlag = data.readUInt16LE(4);
             if (fecFlag == typeData || fecFlag == typeParity) {
-                // 16bit kcp cmd [81-84] and frg [0-255] will not overlap with FEC type 0x00f1 0x00f2
+                // 16 bit kcp cmd [81-84] and frg [0-255] will not overlap with FEC type 0x00f1 0x00f2
                 // packet with FEC
                 if (fecFlag == typeData && data.byteLength >= fecHeaderSizePlus2 + IKCP_OVERHEAD) {
                     conv = data.readUInt32LE(fecHeaderSizePlus2);
@@ -93,7 +70,6 @@ export class Listener {
                     listener: this,
                     conn: this.conn,
                     ownConn: false,
-                    block: this.block,
                 });
                 sess.key = key;
                 this.sessions[key] = sess;
@@ -103,9 +79,7 @@ export class Listener {
         }
     }
 
-    /**
-     * Stop UDP listening, close socket
-     */
+    // stop UDP listening, close socket
     close(): any {
         if (this.ownConn) {
             this.conn.close();
@@ -133,16 +107,11 @@ export class UDPSession extends EventEmitter {
     ownConn: boolean; // true if we created conn internally, false if provided by caller
     kcp: Kcp; // KCP ARQ protocol
     listener: Listener; // pointing to the Listener object if it's been accepted by a Listener
-    block: CryptBlock; // BlockCrypt     // block encryption object
 
     // kcp receiving is based on packets
     // recvbuf turns packets into stream
     recvbuf: Buffer;
     bufptr: Buffer;
-
-    // FEC codec
-    // fecDecoder: FecDecoder;
-    // fecEncoder: FecEncoder;
 
     // settings
     port: number;
@@ -161,8 +130,6 @@ export class UDPSession extends EventEmitter {
         this.recvbuf = Buffer.alloc(1);
         this.bufptr = Buffer.alloc(1);
 
-        // FEC codec
-
         // settings
         this.port = 0;
 
@@ -171,12 +138,12 @@ export class UDPSession extends EventEmitter {
         this.writeDelay = false; // delay kcp.flush() for Write() for bulk transfer
     }
 
-    // Write implements net.Conn
+    // write implements net.Conn
     write(b: Buffer): number {
         return this.writeBuffers([b]);
     }
 
-    // WriteBuffers write a vector of byte slices to the underlying connection
+    // writeBuffers write a vector of byte slices to the underlying connection
     writeBuffers(v: Buffer[]): number {
         let n = 0;
         for (const b of v) {
@@ -186,22 +153,12 @@ export class UDPSession extends EventEmitter {
         return n;
     }
 
-    // Close closes the connection.
+    // close closes the connection
     close() {
         // try best to send all queued messages
         this.kcp.flush(false);
         // release pending segments
         this.kcp.release();
-
-        // release fec
-        // if (this.fecDecoder) {
-        //     this.fecDecoder.release();
-        //     this.fecDecoder = undefined;
-        // }
-        // if (this.fecEncoder) {
-        //     this.fecEncoder.release();
-        //     this.fecEncoder = undefined;
-        // }
 
         if (this.listener) {
             this.listener.closeSession(this.key);
@@ -210,17 +167,17 @@ export class UDPSession extends EventEmitter {
         }
     }
 
-    // SetWriteDelay delays write for bulk transfer until the next update interval
+    // setWriteDelay delays write for bulk transfer until the next update interval
     setWriteDelay(delay: boolean) {
         this.writeDelay = delay;
     }
 
-    // SetWindowSize set maximum window size
+    // setWindowSize set maximum window size
     setWindowSize(sndwnd: number, rcvwnd: number) {
         this.kcp.setWndSize(sndwnd, rcvwnd);
     }
 
-    // SetMtu sets the maximum transmission unit(not including UDP header)
+    // setMtu sets the maximum transmission unit (not including UDP header)
     setMtu(mtu: number): boolean {
         if (mtu > mtuLimit) {
             return false;
@@ -230,7 +187,7 @@ export class UDPSession extends EventEmitter {
         return true;
     }
 
-    // SetStreamMode toggles the stream mode on/off
+    // setStreamMode toggles the stream mode on / off
     setStreamMode(enable: boolean) {
         if (enable) {
             this.kcp.stream = 1;
@@ -239,59 +196,23 @@ export class UDPSession extends EventEmitter {
         }
     }
 
-    // SetACKNoDelay changes ack flush option, set true to flush ack immediately,
+    // setACKNoDelay changes ack flush option, set true to flush ack immediately
     setACKNoDelay(nodelay: boolean) {
         this.ackNoDelay = nodelay;
     }
 
-    // SetNoDelay calls nodelay() of kcp
+    // setNoDelay calls nodelay() of kcp
     // https://github.com/skywind3000/kcp/blob/master/README.en.md#protocol-configuration
     setNoDelay(nodelay: number, interval: number, resend: number, nc: number) {
         this.kcp.setNoDelay(nodelay, interval, resend, nc);
     }
 
-    // post-processing for sending a packet from kcp core
-    // steps:
-    // 1. FEC packet generation
-    // 2. CRC32 integrity
-    // 3. Encryption
     output(buf: Buffer) {
         const doOutput = (buff: Buffer) => {
-            // 2&3. crc32 & encryption
-            if (this.block) {
-                crypto.randomFillSync(buff, 0, nonceSize);
-                const checksum = crc32.buf(buff.slice(cryptHeaderSize)) >>> 0;
-                buff.writeUInt32LE(checksum, nonceSize);
-                buff = this.block.encrypt(buff);
-            }
-            // this.conn.send(buff, this.port, this.host);
-            // this.conn.send(buff, null, null, this.port, this.host);
+            // may need to modify this 0 or buff.length
             this.conn.send(buff, 0, buff.length, this.port, this.host);
         };
-
-        // 1. FEC encoding
-        // if (this.fecEncoder) {
-        //     // ecc = this.fecEncoder.encode
-        //     this.fecEncoder.encode(buf, (err, result) => {
-        //         if (err) {
-        //             // logger.error(err);
-        //             return;
-        //         }
-        //         const { data, parity } = result;
-        //         const dataArr: Buffer[] = [];
-        //         if (data?.length) {
-        //             dataArr.push(...data);
-        //         }
-        //         if (parity?.length) {
-        //             dataArr.push(...parity);
-        //         }
-        //         for (const buff of dataArr) {
-        //             doOutput(buff);
-        //         }
-        //     });
-        // } else {
         doOutput(buf);
-        // }
     }
 
     check() {
@@ -304,98 +225,34 @@ export class UDPSession extends EventEmitter {
         }, this.kcp.check());
     }
 
-    // GetConv gets conversation id of a session
+    // getConv gets conversation id of a session
     getConv(): number {
         return this.kcp.conv;
     }
 
-    // GetRTO gets current rto of the session
+    // getRTO gets current rto of the session
     getRTO(): number {
         return this.kcp.rx_rto;
     }
 
-    // GetSRTT gets current srtt of the session
+    // getSRTT gets current srtt of the session
     getSRTT(): number {
         return this.kcp.rx_srtt;
     }
 
-    // GetRTTVar gets current rtt variance of the session
+    // getRTTVar gets current rtt variance of the session
     getSRTTVar(): number {
         return this.kcp.rx_rttvar;
     }
 
     // packet input stage
     packetInput(data: Buffer): void {
-        let decrypted = false;
-        if (this.block && data.byteLength >= cryptHeaderSize) {
-            // decrypt
-            data = this.block.decrypt(data);
-
-            const checksum = crc32.buf(data.slice(cryptHeaderSize)) >>> 0;
-            if (checksum === data.readUInt32LE(nonceSize)) {
-                data = data.slice(cryptHeaderSize);
-                decrypted = true;
-            } else {
-                // do nothing
-                // crc32 test failed
-            }
-        } else if (this.block == undefined) {
-            decrypted = true;
-        }
-
-        if (decrypted && data.byteLength >= IKCP_OVERHEAD) {
+        if (data.byteLength >= IKCP_OVERHEAD) {
             this.kcpInput(data);
         }
     }
 
     kcpInput(data: Buffer) {
-        const kcpInErrors = 0;
-        const fecParityShards = 0;
-
-        // const fpkt = new FecPacket(data);
-        // const fecFlag = fpkt.flag();
-        // if (fecFlag == typeData || fecFlag == typeParity) {
-        //     // 16bit kcp cmd [81-84] and frg [0-255] will not overlap with FEC type 0x00f1 0x00f2
-        //     if (data.byteLength >= fecHeaderSizePlus2) {
-        //         if (fecFlag == typeParity) {
-        //             fecParityShards++;
-        //         }
-
-        //         // if fecDecoder is not initialized, create one with default parameter
-        //         if (!this.fecDecoder) {
-        //             this.fecDecoder = new FecDecoder(1, 1);
-        //         }
-        //         this.fecDecoder.decode(fpkt, (err, result) => {
-        //             if (err) {
-        //                 return;
-        //             }
-        //             const { data = [], parity = [] } = result;
-        //             for (const buff of data) {
-        //                 const len = buff.readUInt16LE();
-        //                 const ret = this.kcp.input(buff.slice(2, 2 + len), true, this.ackNoDelay);
-        //                 if (ret != 0) {
-        //                     kcpInErrors++;
-        //                 }
-        //             }
-        //             for (const buff of parity) {
-        //                 const len = buff.readUInt16LE();
-        //                 const ret = this.kcp.input(buff.slice(2, 2 + len), false, this.ackNoDelay);
-        //                 if (ret != 0) {
-        //                     kcpInErrors++;
-        //                 }
-        //             }
-
-        //             const size = this.kcp.peekSize();
-        //             if (size > 0) {
-        //                 const buffer = Buffer.alloc(size);
-        //                 const len = this.kcp.recv(buffer);
-        //                 if (len) {
-        //                     this.emit('recv', buffer.slice(0, len));
-        //                 }
-        //             }
-        //         });
-        //     }
-        // } else {
         this.kcp.input(data, true, this.ackNoDelay);
         const size = this.kcp.peekSize();
         if (size > 0) {
@@ -405,7 +262,6 @@ export class UDPSession extends EventEmitter {
                 this.emit('recv', buffer.slice(0, len));
             }
         }
-        // }
     }
 
     readLoop() {
@@ -423,35 +279,15 @@ function newUDPSession(args: {
     listener: Listener;
     conn: any;
     ownConn: boolean;
-    block: CryptBlock;
 }): UDPSession {
-    const { conv, port, host, listener, conn, ownConn, block } = args;
+    const { conv, port, host, listener, conn, ownConn } = args;
     const sess = new UDPSession();
     sess.port = port;
     sess.host = host;
     sess.conn = conn;
     sess.ownConn = ownConn;
     sess.listener = listener;
-    sess.block = block;
     sess.recvbuf = Buffer.alloc(mtuLimit);
-
-    // FEC codec initialization
-    // if (dataShards && parityShards) {
-    //     sess.fecDecoder = new FecDecoder(dataShards, parityShards);
-    //     if (sess.block) {
-    //         sess.fecEncoder = new FecEncoder(dataShards, parityShards, cryptHeaderSize);
-    //     } else {
-    //         sess.fecEncoder = new FecEncoder(dataShards, parityShards, 0);
-    //     }
-    // }
-
-    // calculate additional header size introduced by FEC and encryption
-    if (sess.block) {
-        sess.headerSize += cryptHeaderSize;
-    }
-    // if (sess.fecEncoder) {
-    //     sess.headerSize += fecHeaderSizePlus2;
-    // }
 
     sess.kcp = new Kcp(conv, sess);
     sess.kcp.setReserveBytes(sess.headerSize);
@@ -462,7 +298,7 @@ function newUDPSession(args: {
     });
 
     if (!sess.listener) {
-        // it's a client connection
+        // this is a client connection
         sess.readLoop();
     }
 
@@ -473,25 +309,8 @@ function newUDPSession(args: {
 
 export type ListenCallback = (session: UDPSession) => void;
 
-// Listen listens for incoming KCP packets addressed to the local address laddr on the network "udp",
-export function Listen(port: number, callback: ListenCallback, nativeSocket: UdpSocket): any {
-    return ListenWithOptions({ port, callback }, nativeSocket);
-}
-
-export interface ListenOptions {
-    port: number;
-    block?: CryptBlock;
-    callback: ListenCallback;
-}
-
-// ListenWithOptions listens for incoming KCP packets addressed to the local address laddr on the network "udp" with packet encryption.
-//
-// 'block' is the block encryption algorithm to encrypt packets.
-//
-// Check https://github.com/klauspost/reedsolomon for details
-export function ListenWithOptions(opts: ListenOptions, nativeSocket: UdpSocket): Listener {
-    const { port, block, callback } = opts;
-    // console.debug('[LISTEN WITH OPTIONS]:', opts);
+export function Listen(nativeSocket: UdpSocket, callback: ListenCallback): Listener {
+    // console.debug('[LISTEN OPTIONS]:', opts);
     // console.debug('[NATIVE SOCKET]:', nativeSocket);
     const conn: UdpSocket = nativeSocket;
     conn.on('listening', (err) => {
@@ -499,46 +318,36 @@ export function ListenWithOptions(opts: ListenOptions, nativeSocket: UdpSocket):
             console.error('[ERROR]:', err);
         }
     });
-    return serveConn(block, conn, true, callback);
+    return serveConn(conn, callback, true);
 }
 
-// ServeConn serves KCP protocol for a single packet connection.
-export function ServeConn(block: any, conn: UdpSocket, callback: ListenCallback): Listener {
-    return serveConn(block, conn, false, callback);
+// ServeConn serves KCP protocol for a single packet connection
+export function ServeConn(conn: UdpSocket, callback: ListenCallback): Listener {
+    return serveConn(conn, callback, false);
 }
 
-function serveConn(block: any, conn: UdpSocket, ownConn: boolean, callback: ListenCallback): Listener {
+function serveConn(conn: UdpSocket, callback: ListenCallback, ownConn: boolean): Listener {
     const listener = new Listener();
     listener.conn = conn;
     listener.ownConn = ownConn;
     listener.sessions = {};
-    listener.block = block;
     listener.callback = callback;
     listener.monitor();
     return listener;
-}
-
-// Dial connects to the remote address "raddr" on the network "udp" without encryption and FEC
-export function Dial(conv: number, port: number, host: string, nativeSocket: UdpSocket): any {
-    return DialWithOptions({ conv, port, host }, nativeSocket);
 }
 
 export interface DialOptions {
     conv: number;
     port: number;
     host: string;
-    block?: CryptBlock;
 }
 
-// DialWithOptions connects to the remote address "raddr" on the network "udp" with packet encryption
-//
-// 'block' is the block encryption algorithm to encrypt packets.
-//
-// Check https://github.com/klauspost/reedsolomon for details
-export function DialWithOptions(opts: DialOptions, nativeSocket: UdpSocket): UDPSession {
-    const { conv, port, host, block } = opts;
-    // console.debug('[DIAL WITH OPTIONS]:', opts);
+export function Dial(nativeSocket: UdpSocket, opts: DialOptions): UDPSession {
+    const { conv, port, host } = opts;
+    // console.debug('[DIAL OPTIONS]:', opts);
     // console.debug('[NATIVE SOCKET]:', nativeSocket);
+
+    // may potentially need to change the ownConn value
     const conn = nativeSocket;
     return newUDPSession({
         conv,
@@ -547,6 +356,5 @@ export function DialWithOptions(opts: DialOptions, nativeSocket: UdpSocket): UDP
         listener: undefined,
         conn,
         ownConn: true,
-        block,
     });
 }

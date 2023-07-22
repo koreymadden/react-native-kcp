@@ -1,6 +1,6 @@
 {
     "name": "react-native-kcp",
-    "version": "0.1.24",
+    "version": "0.1.26",
     "description": "React Native KCP Protocol",
     "homepage": "https://github.com/koreymadden/react-native-kcp",
     "main": "./dist/index.js",
@@ -14,7 +14,12 @@
     "keywords": [
         "kcp",
         "react",
-        "native"
+        "native",
+        "udp",
+        "react-native",
+        "react-native-kcp",
+        "react native",
+        "react native kcp"
     ],
     "author": "maddenkorey@gmail.com",
     "license": "MIT",

@@ -130,8 +130,6 @@ export class UDPSession extends EventEmitter {
         this.recvbuf = Buffer.alloc(1);
         this.bufptr = Buffer.alloc(1);
 
-        // FEC codec
-
         // settings
         this.port = 0;
 
@@ -179,7 +177,7 @@ export class UDPSession extends EventEmitter {
         this.kcp.setWndSize(sndwnd, rcvwnd);
     }
 
-    // setMtu sets the maximum transmission unit(not including UDP header)
+    // setMtu sets the maximum transmission unit (not including UDP header)
     setMtu(mtu: number): boolean {
         if (mtu > mtuLimit) {
             return false;
@@ -189,7 +187,7 @@ export class UDPSession extends EventEmitter {
         return true;
     }
 
-    // setStreamMode toggles the stream mode on/off
+    // setStreamMode toggles the stream mode on / off
     setStreamMode(enable: boolean) {
         if (enable) {
             this.kcp.stream = 1;
@@ -211,8 +209,7 @@ export class UDPSession extends EventEmitter {
 
     output(buf: Buffer) {
         const doOutput = (buff: Buffer) => {
-            // this.conn.send(buff, this.port, this.host);
-            // this.conn.send(buff, null, null, this.port, this.host);
+            // may need to modify this 0 or buff.length
             this.conn.send(buff, 0, buff.length, this.port, this.host);
         };
         doOutput(buf);
@@ -312,13 +309,8 @@ function newUDPSession(args: {
 
 export type ListenCallback = (session: UDPSession) => void;
 
-export interface ListenOptions {
-    callback: ListenCallback;
-}
-
-export function ListenWithOptions(opts: ListenOptions, nativeSocket: UdpSocket): Listener {
-    const { callback } = opts;
-    // console.debug('[LISTEN WITH OPTIONS]:', opts);
+export function Listen(nativeSocket: UdpSocket, callback: ListenCallback): Listener {
+    // console.debug('[LISTEN OPTIONS]:', opts);
     // console.debug('[NATIVE SOCKET]:', nativeSocket);
     const conn: UdpSocket = nativeSocket;
     conn.on('listening', (err) => {
@@ -326,15 +318,15 @@ export function ListenWithOptions(opts: ListenOptions, nativeSocket: UdpSocket):
             console.error('[ERROR]:', err);
         }
     });
-    return serveConn(conn, true, callback);
+    return serveConn(conn, callback, true);
 }
 
 // ServeConn serves KCP protocol for a single packet connection
 export function ServeConn(conn: UdpSocket, callback: ListenCallback): Listener {
-    return serveConn(conn, false, callback);
+    return serveConn(conn, callback, false);
 }
 
-function serveConn(conn: UdpSocket, ownConn: boolean, callback: ListenCallback): Listener {
+function serveConn(conn: UdpSocket, callback: ListenCallback, ownConn: boolean): Listener {
     const listener = new Listener();
     listener.conn = conn;
     listener.ownConn = ownConn;
@@ -350,10 +342,12 @@ export interface DialOptions {
     host: string;
 }
 
-export function DialWithOptions(opts: DialOptions, nativeSocket: UdpSocket): UDPSession {
+export function Dial(nativeSocket: UdpSocket, opts: DialOptions): UDPSession {
     const { conv, port, host } = opts;
-    // console.debug('[DIAL WITH OPTIONS]:', opts);
+    // console.debug('[DIAL OPTIONS]:', opts);
     // console.debug('[NATIVE SOCKET]:', nativeSocket);
+
+    // may potentially need to change the ownConn value
     const conn = nativeSocket;
     return newUDPSession({
         conv,

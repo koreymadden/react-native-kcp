@@ -1,6 +1,6 @@
 # react-native-kcp
 
-### React Native Implementation of the [KCP Protocol](kcp).
+### React Native Implementation of the [KCP Protocol](https://github.com/skywind3000/kcp/blob/master/README.en.md).
 
 [![JavaScript KCP](https://img.shields.io/badge/Powered_By-KCP-293C81?style=for-the-badge&logo=JavaScript&logoColor=FFFFFF)](https://reactnative.dev/docs/environment-setup)
 
@@ -30,10 +30,10 @@ npm install react-native-kcp
 
 ### Parameters
 
-| Parameter  | Type           | Description                                             |
-| ---------- | -------------- | ------------------------------------------------------- |
-| UDP Socket | UdpSocket      | Socket created by [react-native-udp](react-native-udp). |
-| Callback   | ListenCallback | Callback when UDP Session is created.                   |
+| Parameter  | Type           | Description                                  |
+| ---------- | -------------- | -------------------------------------------- |
+| UDP Socket | UdpSocket      | Socket created by [react-native-udp][rnudp]. |
+| Callback   | ListenCallback | Callback when UDP Session is created.        |
 
 > Note: You will need to make sure to bind the socket before you pass it into the Listen function.
 
@@ -43,10 +43,10 @@ npm install react-native-kcp
 
 ### Parameters
 
-| Parameter  | Type        | Description                                             |
-| ---------- | ----------- | ------------------------------------------------------- |
-| UDP Socket | UdpSocket   | Socket created by [react-native-udp](react-native-udp). |
-| Options    | DialOptions | Options to configure KCP client.                        |
+| Parameter  | Type        | Description                                  |
+| ---------- | ----------- | -------------------------------------------- |
+| UDP Socket | UdpSocket   | Socket created by [react-native-udp][rnudp]. |
+| Options    | DialOptions | Options to configure KCP client.             |
 
 > Note: You will need to make sure to bind the socket before you pass it into the Dial function.
 
@@ -108,5 +108,4 @@ export const kcpClient = () => {
 };
 ```
 
-[kcp]: https://github.com/skywind3000/kcp
-[react-native-udp]: https://github.com/tradle/react-native-udp/blob/master/README
+[rnudp]: https://github.com/tradle/react-native-udp/blob/master/README.md

@@ -254,13 +254,14 @@ export class UDPSession extends EventEmitter {
 
     kcpInput(data: Buffer) {
         this.kcp.input(data, true, this.ackNoDelay);
-        const size = this.kcp.peekSize();
-        if (size > 0) {
+        let size = this.kcp.peekSize();
+        while (size > 0) {
             const buffer = Buffer.alloc(size);
             const len = this.kcp.recv(buffer);
             if (len) {
                 this.emit('recv', buffer.slice(0, len));
             }
+            size = this.kcp.peekSize(); // check again if more complete messages are available
         }
     }
 
